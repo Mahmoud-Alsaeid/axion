@@ -112,6 +112,9 @@ module.exports = ({ prefix, url}) => {
                     console.log(err);
                 }
                 return count;
+            },
+            exists: function ({key}) {
+                return this.count({key}) === 1;
             }
         },
         hash: {

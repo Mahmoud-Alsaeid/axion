@@ -7,11 +7,14 @@ const VirtualStack          = require('../managers/virtual_stack/VirtualStack.ma
 const ValidatorsLoader      = require('./ValidatorsLoader');
 const ResourceMeshLoader    = require('./ResourceMeshLoader');
 const utils                 = require('../libs/utils');
-
+const MongoLoader = require('./MongoLoader');
 const systemArch            = require('../static_arch/main.system');
 const TokenManager          = require('../managers/token/Token.manager');
+const UserManager          = require('../managers/entities/user/User.manager.api');
 const SharkFin              = require('../managers/shark_fin/SharkFin.manager');
 const TimeMachine           = require('../managers/time_machine/TimeMachine.manager');
+const fileLoader = require('./_common/fileLoader');
+const ControllerLoader = require('./ControllerLoader');
 
 /** 
  * load sharable modules
@@ -35,7 +38,7 @@ module.exports = class ManagersLoader {
             aeon,
             managers: this.managers, 
             validators: this.validators,
-            // mongomodels: this.mongomodels,
+            mongomodels: this.mongomodels,
             resourceNodes: this.resourceNodes,
         };
         
@@ -43,15 +46,15 @@ module.exports = class ManagersLoader {
 
     _preload(){
         const validatorsLoader    = new ValidatorsLoader({
-            models: require('../managers/_common/schema.models'),
+            models: fileLoader('./managers/**/*.model.js'),
             customValidators: require('../managers/_common/schema.validators'),
         });
         const resourceMeshLoader  = new ResourceMeshLoader({})
-        // const mongoLoader      = new MongoLoader({ schemaExtension: "mongoModel.js" });
+        const mongoLoader      = new MongoLoader({ schemaExtension: "mongoModel.js" });
 
         this.validators           = validatorsLoader.load();
         this.resourceNodes        = resourceMeshLoader.load();
-        // this.mongomodels          = mongoLoader.load();
+        this.mongomodels          = mongoLoader.load();
 
     }
 
@@ -66,6 +69,9 @@ module.exports = class ManagersLoader {
         this.managers.shark               = new SharkFin({ ...this.injectable, layers, actions });
         this.managers.timeMachine         = new TimeMachine(this.injectable);
         this.managers.token               = new TokenManager(this.injectable);
+        /**************************************** Handlers Loader */
+        const controllerLoader            = new ControllerLoader(this.injectable);
+        controllerLoader.load()
         /*************************************************************************************************/
         this.managers.mwsExec             = new VirtualStack({ ...{ preStack: [/* '__token', */'__device',] }, ...this.injectable });
         this.managers.userApi             = new ApiHandler({...this.injectable,...{prop:'httpExposed'}});

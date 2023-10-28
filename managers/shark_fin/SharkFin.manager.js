@@ -155,7 +155,6 @@ module.exports = class SharkFin {
     /** check layer config it may have a default **/
     let layerConfig = {};
     if(layer) layerConfig = this._getLayerConfig({ layer, variant });
-    // console.log(`layerConfig`, layer, layerConfig);
     /*****************************IS USER BLOCKED*****************************/
     const isblocked = await this.isUserBlocked({ userId, nodeId });
     if(isblocked) return false;

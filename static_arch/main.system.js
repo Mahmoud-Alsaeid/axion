@@ -33,7 +33,23 @@ const layers = {
                 _default: {inherit: true},
             }
         }
-    }
+    },
+
+    user: {
+        _default: { anyoneCan: 'read', ownerCan: 'audit' },
+    },
+    school:{
+        _default: { anyoneCan: 'read' },
+        _superadmin:{anyoneCan : 'delete'}
+    },
+    classroom:{
+        _default: { anyoneCan: 'read' },
+        _schooladmin:{anyoneCan : 'delete'}
+    },
+    student:{
+        _default: { anyoneCan: 'read' },
+        _schooladmin:{anyoneCan : 'delete'}
+    },
 }
 
 const actions = {
@@ -41,8 +57,8 @@ const actions = {
     none: 1,
     read: 2,
     create: 3,
-    audit: 4,
-    config: 5
+    update: 4,
+    delete: 5
 }
 
 

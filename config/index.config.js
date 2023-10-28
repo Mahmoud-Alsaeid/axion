@@ -18,13 +18,12 @@ const OYSTER_PREFIX                    = process.env.OYSTER_PREFIX || 'none';
 
 const CACHE_REDIS                      = process.env.CACHE_REDIS || REDIS_URI;
 const CACHE_PREFIX                     = process.env.CACHE_PREFIX || `${SERVICE_NAME}:ch`;
-
 const MONGO_URI                        = process.env.MONGO_URI || `mongodb://localhost:27017/${SERVICE_NAME}`;
 const config                           = require(`./envs/${ENV}.js`);
 const LONG_TOKEN_SECRET                = process.env.LONG_TOKEN_SECRET || null;
 const SHORT_TOKEN_SECRET               = process.env.SHORT_TOKEN_SECRET || null;
 const NACL_SECRET                      = process.env.NACL_SECRET || null;
-
+const MODULE_NAME                      = process.env.MODULE_NAME || 'module-name';
 if(!LONG_TOKEN_SECRET || !SHORT_TOKEN_SECRET || !NACL_SECRET) {
     throw Error('missing .env variables check index.config');
 }
@@ -45,6 +44,7 @@ config.dotEnv = {
     ADMIN_URL,
     LONG_TOKEN_SECRET,
     SHORT_TOKEN_SECRET,
+    MODULE_NAME
 };
 
 

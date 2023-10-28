@@ -11,7 +11,7 @@ module.exports = class ApiHandler {
      * @param {string} prop with key to scan for exposed methods
      */
 
-    constructor({config, cortex, cache, managers, mwsRepo, prop}){
+    constructor({config, cortex, cache, managers, mwsRepo, prop, validators}){
         this.config        = config;
         this.cache         = cache; 
         this.cortex        = cortex;
@@ -25,6 +25,7 @@ module.exports = class ApiHandler {
         this.fileUpload    = {};
         this.mwsStack        = {};
         this.mw            = this.mw.bind(this);
+        this.validators = validators;
 
         /** filter only the modules that have interceptors */
         // console.log(`# Http API`);
@@ -42,12 +43,14 @@ module.exports = class ApiHandler {
                         method=frags[0];
                         fnName=frags[1];
                     }
+                    
                     if(!this.methodMatrix[mk][method]){
                         this.methodMatrix[mk][method]=[];
                     }
                     this.methodMatrix[mk][method].push(fnName);
 
                     let params = getParamNames(this.managers[mk][fnName], fnName, mk);
+                    
                     params = params.split(',').map(i=>{
                         i=i.trim();
                         i=i.replace('{','');
@@ -86,7 +89,7 @@ module.exports = class ApiHandler {
                 // console.log(`## ${mk}`);
                 if(this.exposed[mk].cortexExposed){
                     this.exposed[mk].cortexExposed.forEach(i=>{
-                        // console.log(`* ${i} :`,getParamNames(this.exposed[mk][i]));
+                        //console.log(`* ${i} :`,getParamNames(this.exposed[mk][i]));
                     })
                 }
             }
@@ -129,7 +132,7 @@ module.exports = class ApiHandler {
         let context       = req.params.context;
         let fnName        = req.params.fnName;
         let moduleMatrix  = this.methodMatrix[moduleName];
-
+        
         /** validate module */
         if(!moduleMatrix) return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `module ${moduleName} not found`});
         
@@ -137,7 +140,6 @@ module.exports = class ApiHandler {
         if(!moduleMatrix[method]){
             return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `unsupported method ${method} for ${moduleName}`});
         }
-
         if(!moduleMatrix[method].includes(fnName)){
             return this.managers.responseDispatcher.dispatch(res, {ok: false, message: `unable to find function ${fnName} with method ${method}`});
         }
@@ -151,6 +153,12 @@ module.exports = class ApiHandler {
             /** executed after all middleware finished */
 
             let body = req.body || {};
+            if (moduleName in this.validators && fnName in this.validators[moduleName]){
+                const validationResult = await this.validators[moduleName][fnName](body);
+                if(validationResult) {
+                    return this.managers.responseDispatcher.dispatch(res, {ok: false, errors: validationResult})
+                };
+             }
             let result = await this._exec({targetModule: this.managers[moduleName], fnName, data: {
                 ...body, 
                 ...results,

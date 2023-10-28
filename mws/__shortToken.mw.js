@@ -1,5 +1,6 @@
-module.exports = ({ meta, config, managers }) =>{
-    return ({req, res, next})=>{
+const userModel = require('../managers/entities/user/user.mongoModel')
+module.exports =  ({ meta, config, managers }) =>{
+    return async ({req, res, next})=>{
         if(!req.headers.token){
             console.log('token required but not found')
             return managers.responseDispatcher.dispatch(res, {ok: false, code:401, errors: 'unauthorized'});
@@ -15,6 +16,8 @@ module.exports = ({ meta, config, managers }) =>{
             console.log('failed to decode-2')
             return managers.responseDispatcher.dispatch(res, {ok: false, code:401, errors: 'unauthorized'});
         }
-        next(decoded);
+        console.log(decoded);
+        const user = await userModel.findById(decoded.userId);
+        next(user);
     }
 }
